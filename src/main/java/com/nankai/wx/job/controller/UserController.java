@@ -1,9 +1,11 @@
 package com.nankai.wx.job.controller;
 
 import com.alibaba.fastjson.JSONObject;
+import com.nankai.wx.job.db.domain.Eduexp;
 import com.nankai.wx.job.db.domain.User;
 import com.nankai.wx.job.db.domain.Workexp;
 import com.nankai.wx.job.dto.CompanyDto;
+import com.nankai.wx.job.dto.EduexpDto;
 import com.nankai.wx.job.dto.JobInfoDto;
 import com.nankai.wx.job.dto.ResultDto;
 import com.nankai.wx.job.dto.ResumeDto;
@@ -256,7 +258,7 @@ public class UserController {
     @ResponseBody
     public JSONObject updateWorkexp(String sessionId, Workexp workexp) {
         try {
-            logger.info("[updateWorkexp] sessionId={}, workexp", sessionId, workexp);
+            logger.info("[updateWorkexp] sessionId={}, workexp={}", sessionId, workexp);
             String openid = CommonUtil.getOpenid(sessionId);
             if (StringUtils.isBlank(openid)) {
                 return HttpBuilder.genCode(401, "invalid session id");
@@ -265,6 +267,57 @@ public class UserController {
             return HttpBuilder.genJson(saveRes);
         } catch (Exception e) {
             logger.error("[updateWorkexp] [update workexp exception] sessionId={}", sessionId, e);
+            return HttpBuilder.genError(e);
+        }
+    }
+
+    @RequestMapping("/eduexp")
+    @ResponseBody
+    public JSONObject getEduexp(String sessionId, Integer id) {
+        try {
+            logger.info("[getEduexp] sessionId={}, id={}", sessionId, id);
+            String openid = CommonUtil.getOpenid(sessionId);
+            if (StringUtils.isBlank(openid)) {
+                return HttpBuilder.genCode(401, "invalid session id");
+            }
+            ResultDto<EduexpDto> eduexpRes = userInfoService.getEduexp(openid, id);
+            return HttpBuilder.genJson(eduexpRes);
+        } catch (Exception e) {
+            logger.error("[getEduexp] [get eduexp exception] sessionId={}", sessionId, e);
+            return HttpBuilder.genError(e);
+        }
+    }
+
+    @RequestMapping("/resume/eduexp/save")
+    @ResponseBody
+    public JSONObject saveEduexp(String sessionId, Eduexp eduexp) {
+        try {
+            logger.info("[saveEduexp] sessionId={}, eduexp", sessionId, eduexp);
+            String openid = CommonUtil.getOpenid(sessionId);
+            if (StringUtils.isBlank(openid)) {
+                return HttpBuilder.genCode(401, "invalid session id");
+            }
+            ResultDto<Boolean> saveRes = userInfoService.saveEduexp(openid, eduexp);
+            return HttpBuilder.genJson(saveRes);
+        } catch (Exception e) {
+            logger.error("[saveEduexp] [save eduexp exception] sessionId={}", sessionId, e);
+            return HttpBuilder.genError(e);
+        }
+    }
+
+    @RequestMapping("/resume/eduexp/update")
+    @ResponseBody
+    public JSONObject updateEduexp(String sessionId, Eduexp eduexp) {
+        try {
+            logger.info("[updateEduexp] sessionId={}, eduexp={}", sessionId, eduexp);
+            String openid = CommonUtil.getOpenid(sessionId);
+            if (StringUtils.isBlank(openid)) {
+                return HttpBuilder.genCode(401, "invalid session id");
+            }
+            ResultDto<Boolean> saveRes = userInfoService.updateEduexp(openid, eduexp);
+            return HttpBuilder.genJson(saveRes);
+        } catch (Exception e) {
+            logger.error("[updateEduexp] [update eduexp exception] sessionId={}", sessionId, e);
             return HttpBuilder.genError(e);
         }
     }

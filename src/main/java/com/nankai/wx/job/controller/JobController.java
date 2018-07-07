@@ -36,7 +36,7 @@ public class JobController {
     @ResponseBody
     @RequestMapping("/list")
     public JSONObject list(JobQuery query) {
-        logger.error("[list] query={}", query);
+        logger.info("[list] query={}", query);
         try {
             ResultDto<List<JobInfoDto>> jobListRes = jobInfoService.getJobListByQuery(query);
             if (!jobListRes.isSuccess()) {

@@ -8,17 +8,20 @@ import com.google.common.collect.Sets;
 import com.nankai.wx.job.db.domain.Collection;
 import com.nankai.wx.job.db.domain.Company;
 import com.nankai.wx.job.db.domain.Concerned;
+import com.nankai.wx.job.db.domain.Eduexp;
 import com.nankai.wx.job.db.domain.Job;
 import com.nankai.wx.job.db.domain.User;
 import com.nankai.wx.job.db.domain.Workexp;
 import com.nankai.wx.job.db.service.CollectionService;
 import com.nankai.wx.job.db.service.CompanyService;
 import com.nankai.wx.job.db.service.ConcernedService;
+import com.nankai.wx.job.db.service.EduexpService;
 import com.nankai.wx.job.db.service.IntegratedService;
 import com.nankai.wx.job.db.service.JobService;
 import com.nankai.wx.job.db.service.UserService;
 import com.nankai.wx.job.db.service.WorkexpService;
 import com.nankai.wx.job.dto.CompanyDto;
+import com.nankai.wx.job.dto.EduexpDto;
 import com.nankai.wx.job.dto.JobInfoDto;
 import com.nankai.wx.job.dto.ResultDto;
 import com.nankai.wx.job.dto.ResumeDto;
@@ -76,6 +79,8 @@ public class UserInfoService {
     private IntegratedService integratedService;
     @Resource
     private WorkexpService workexpService;
+    @Resource
+    private EduexpService eduexpService;
 
     /**
      * 根据小程序登录的code生成sessionId
@@ -289,14 +294,17 @@ public class UserInfoService {
             return ResBuilder.genError("invalid user");
         }
         Integer userId = userRes.getData().getId();
-        //get个人信息
         //get工作经历
         ResultDto<List<Workexp>> workexpRes = workexpService.getWorkexpsByUserId(userId);
         List<Workexp> workexps = workexpRes.isSuccess() ? workexpRes.getData() : Collections.emptyList();
         //get教育经历
+        ResultDto<List<Eduexp>> eduexpRes = eduexpService.getEduexpsByUserId(userId);
+        List<Eduexp> eduexps = eduexpRes.isSuccess() ? eduexpRes.getData() : Collections.emptyList();
 
         ResumeDto resumeDto = new ResumeDto();
         resumeDto.setWorkexps(convertWorkexps(workexps));
+        resumeDto.setEdus(convertEduexps(eduexps));
+        resumeDto.setUserDto(convert(userRes.getData()));
 
         return ResBuilder.genData(resumeDto);
     }
@@ -341,6 +349,52 @@ public class UserInfoService {
         return workexpService.update(userId, workexp);
     }
 
+    public ResultDto<EduexpDto> getEduexp(String openid, int id) {
+        Preconditions.checkArgument(StringUtils.isNotBlank(openid));
+        ResultDto<User> userRes = userService.getOrInsert(openid);
+        if (!userRes.isSuccess() || userRes.getData() == null) {
+            return ResBuilder.genError("invalid user");
+        }
+        Integer userId = userRes.getData().getId();
+        ResultDto<List<Eduexp>> eduexpRes = eduexpService.getEduexpsById(userId, id);
+        if (!eduexpRes.isSuccess() || CollectionUtils.isEmpty(eduexpRes.getData())) {
+            return ResBuilder.genData("数据不存在");
+        }
+        return ResBuilder.genData(convertEduexp(eduexpRes.getData().get(0)));
+    }
+
+    /**
+     * save workexp
+     * @param openid
+     * @param eduexp
+     * @return
+     */
+    public ResultDto<Boolean> saveEduexp(String openid, Eduexp eduexp) {
+        Preconditions.checkArgument(StringUtils.isNotBlank(openid));
+        ResultDto<User> userRes = userService.getOrInsert(openid);
+        if (!userRes.isSuccess() || userRes.getData() == null) {
+            return ResBuilder.genError("invalid user");
+        }
+        Integer userId = userRes.getData().getId();
+        return eduexpService.insert(userId, eduexp);
+    }
+
+    /**
+     * update eduexp
+     * @param openid
+     * @param eduexp
+     * @return
+     */
+    public ResultDto<Boolean> updateEduexp(String openid, Eduexp eduexp) {
+        Preconditions.checkArgument(StringUtils.isNotBlank(openid));
+        ResultDto<User> userRes = userService.getOrInsert(openid);
+        if (!userRes.isSuccess() || userRes.getData() == null) {
+            return ResBuilder.genError("invalid user");
+        }
+        Integer userId = userRes.getData().getId();
+        return eduexpService.update(userId, eduexp);
+    }
+
     public ResultDto<UserDto> userInfo(String openid) {
         Preconditions.checkArgument(StringUtils.isNotBlank(openid));
         ResultDto<User> userRes = userService.getOrInsert(openid);
@@ -383,5 +437,27 @@ public class UserInfoService {
         WorkexpDto workexpDto = new WorkexpDto();
         BeanUtils.copyProperties(workexp, workexpDto);
         return workexpDto;
+    }
+
+    public List<EduexpDto> convertEduexps(List<Eduexp> eduexps) {
+        if (CollectionUtils.isEmpty(eduexps)) {
+            return Collections.emptyList();
+        }
+        List<EduexpDto> eduexpDtos = Lists.newArrayList();
+        eduexps.forEach(eduexp -> {
+            EduexpDto eduexpDto = new EduexpDto();
+            BeanUtils.copyProperties(eduexp, eduexpDto);
+            eduexpDtos.add(eduexpDto);
+        });
+        return eduexpDtos;
+    }
+
+    public EduexpDto convertEduexp(Eduexp eduexp) {
+        if (eduexp == null) {
+            return null;
+        }
+        EduexpDto eduexpDto = new EduexpDto();
+        BeanUtils.copyProperties(eduexp, eduexpDto);
+        return eduexpDto;
     }
 }

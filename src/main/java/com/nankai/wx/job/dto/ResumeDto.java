@@ -11,6 +11,7 @@ import java.util.List;
 public class ResumeDto {
     private List<WorkexpDto> workexps;
     private List<EduexpDto> edus;
+    private UserDto userDto;
 
     public List<WorkexpDto> getWorkexps() {
         return workexps;
@@ -26,5 +27,23 @@ public class ResumeDto {
 
     public void setEdus(List<EduexpDto> edus) {
         this.edus = edus;
+    }
+
+    public UserDto getUserDto() {
+        return userDto;
+    }
+
+    public void setUserDto(UserDto userDto) {
+        this.userDto = userDto;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuffer sb = new StringBuffer("ResumeDto{");
+        sb.append("workexps=").append(workexps);
+        sb.append(", edus=").append(edus);
+        sb.append(", userDto=").append(userDto);
+        sb.append('}');
+        return sb.toString();
     }
 }
