@@ -7,18 +7,13 @@ import org.apache.ibatis.annotations.InsertProvider;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.SelectProvider;
+import org.apache.ibatis.annotations.UpdateProvider;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.apache.ibatis.jdbc.SqlBuilder.BEGIN;
-import static org.apache.ibatis.jdbc.SqlBuilder.FROM;
-import static org.apache.ibatis.jdbc.SqlBuilder.INSERT_INTO;
-import static org.apache.ibatis.jdbc.SqlBuilder.SELECT;
-import static org.apache.ibatis.jdbc.SqlBuilder.SQL;
-import static org.apache.ibatis.jdbc.SqlBuilder.VALUES;
-import static org.apache.ibatis.jdbc.SqlBuilder.WHERE;
+import static org.apache.ibatis.jdbc.SqlBuilder.*;
 
 /**
  * @author michealyang
@@ -36,6 +31,9 @@ public interface CompanyDao {
     @InsertProvider(type = SqlProvider.class, method = "insert")
     int insert(Company company);
 
+    @UpdateProvider(type = SqlProvider.class, method = "update")
+    int update(Company company);
+
 
     class SqlProvider {
 
@@ -49,15 +47,32 @@ public interface CompanyDao {
             if(StringUtils.isNotBlank(company.getLogo())) {
                 VALUES("logo", "#{logo}");
             }
-            if(StringUtils.isNotBlank(company.getLocation())) {
-                VALUES("location", "#{location}");
+            if(StringUtils.isNotBlank(company.getFullname())) {
+                VALUES("fullname", "#{fullname}");
             }
-            if(StringUtils.isNotBlank(company.getCompayAbstract())) {
-                VALUES("compayAbstract", "#{compayAbstract}");
+            if(StringUtils.isNotBlank(company.getIntroduction())) {
+                VALUES("introduction", "#{introduction}");
             }
-            if(StringUtils.isNotBlank(company.getDescription())) {
-                VALUES("description", "#{description}");
+            return SQL();
+        }
+
+        public String update(Company company) {
+            BEGIN();
+            UPDATE("company");
+            if (StringUtils.isNotBlank(company.getName())) {
+                SET("name=#{name}");
             }
+            if (StringUtils.isNotBlank(company.getFullname())) {
+                SET("fullname=#{fullname}");
+            }
+            if (StringUtils.isNotBlank(company.getLogo())) {
+                SET("logo=#{logo}");
+            }
+            if (StringUtils.isNotBlank(company.getIntroduction())) {
+                SET("introduction=#{introduction}");
+            }
+            SET("utime=unix_timestamp()");
+            WHERE("id=#{id}");
             return SQL();
         }
 
@@ -75,12 +90,27 @@ public interface CompanyDao {
                 WHERE("id=#{id}");
             }
 
+            if (conds.get("maxId") != null) {
+                WHERE("id<#{maxId}");
+            }
+
             if (CollectionUtils.isNotEmpty((Set<Integer>) conds.get("ids"))) {
                 Set<Integer> ids = (Set<Integer>) conds.get("ids");
                 WHERE("id in (" + StringUtils.join(ids, ",") + ")");
             }
 
-            return SQL();
+            if (StringUtils.isNotBlank((String) conds.get("keyword"))) {
+                WHERE("name like \"%\"#{keyword}\"%\"");
+            }
+
+            ORDER_BY("id DESC");
+
+            String sql = SQL();
+            if (conds.get("limit") != null) {
+                sql += " limit #{limit}";
+            }
+
+            return sql;
         }
     }
 }

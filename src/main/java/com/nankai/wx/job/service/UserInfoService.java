@@ -7,15 +7,19 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.nankai.wx.job.db.domain.Collection;
 import com.nankai.wx.job.db.domain.Company;
+import com.nankai.wx.job.db.domain.CompanyBelonged;
 import com.nankai.wx.job.db.domain.Concerned;
 import com.nankai.wx.job.db.domain.Eduexp;
+import com.nankai.wx.job.db.domain.Feedback;
 import com.nankai.wx.job.db.domain.Job;
 import com.nankai.wx.job.db.domain.User;
 import com.nankai.wx.job.db.domain.Workexp;
+import com.nankai.wx.job.db.service.BelongedService;
 import com.nankai.wx.job.db.service.CollectionService;
 import com.nankai.wx.job.db.service.CompanyService;
 import com.nankai.wx.job.db.service.ConcernedService;
 import com.nankai.wx.job.db.service.EduexpService;
+import com.nankai.wx.job.db.service.FeedbackService;
 import com.nankai.wx.job.db.service.IntegratedService;
 import com.nankai.wx.job.db.service.JobService;
 import com.nankai.wx.job.db.service.UserService;
@@ -43,6 +47,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author michealyang
@@ -74,6 +79,8 @@ public class UserInfoService {
     @Resource
     private CompanyService companyService;
     @Resource
+    private BelongedService belongedService;
+    @Resource
     private ConcernedService concernedService;
     @Resource
     private IntegratedService integratedService;
@@ -81,6 +88,10 @@ public class UserInfoService {
     private WorkexpService workexpService;
     @Resource
     private EduexpService eduexpService;
+    @Resource
+    private FeedbackService feedbackService;
+    @Resource
+    private CompanyInfoService companyInfoService;
 
     /**
      * 根据小程序登录的code生成sessionId
@@ -339,6 +350,12 @@ public class UserInfoService {
         return workexpService.insert(userId, workexp);
     }
 
+    /**
+     * 更新工作经历
+     * @param openid
+     * @param workexp
+     * @return
+     */
     public ResultDto<Boolean> updateWorkexp(String openid, Workexp workexp) {
         Preconditions.checkArgument(StringUtils.isNotBlank(openid));
         ResultDto<User> userRes = userService.getOrInsert(openid);
@@ -349,6 +366,12 @@ public class UserInfoService {
         return workexpService.update(userId, workexp);
     }
 
+    /**
+     * 获取教育经历
+     * @param openid
+     * @param id
+     * @return
+     */
     public ResultDto<EduexpDto> getEduexp(String openid, int id) {
         Preconditions.checkArgument(StringUtils.isNotBlank(openid));
         ResultDto<User> userRes = userService.getOrInsert(openid);
@@ -364,7 +387,7 @@ public class UserInfoService {
     }
 
     /**
-     * save workexp
+     * 新增教育经历
      * @param openid
      * @param eduexp
      * @return
@@ -380,7 +403,7 @@ public class UserInfoService {
     }
 
     /**
-     * update eduexp
+     * 更新教育经历
      * @param openid
      * @param eduexp
      * @return
@@ -395,6 +418,26 @@ public class UserInfoService {
         return eduexpService.update(userId, eduexp);
     }
 
+    /**
+     * 保存反馈
+     * @param openid
+     * @param feedbackStr
+     * @return
+     */
+    public ResultDto<Boolean> saveFeedback(String openid, String feedbackStr) {
+        Preconditions.checkArgument(StringUtils.isNotBlank(openid));
+        ResultDto<User> userRes = userService.getOrInsert(openid);
+        if (!userRes.isSuccess() || userRes.getData() == null) {
+            return ResBuilder.genError("invalid user");
+        }
+        Integer userId = userRes.getData().getId();
+
+        Feedback feedback = new Feedback();
+        feedback.setUserId(userId);
+        feedback.setFeedback(feedbackStr);
+        return feedbackService.insert(feedback);
+    }
+
     public ResultDto<UserDto> userInfo(String openid) {
         Preconditions.checkArgument(StringUtils.isNotBlank(openid));
         ResultDto<User> userRes = userService.getOrInsert(openid);
@@ -402,6 +445,77 @@ public class UserInfoService {
             return ResBuilder.genError("invalid user");
         }
         return ResBuilder.genData(convert(userRes.getData()));
+    }
+
+    public ResultDto<Integer> updateUserType(String openid, Integer srcType) {
+        Preconditions.checkArgument(StringUtils.isNotBlank(openid));
+        ResultDto<User> userRes = userService.getOrInsert(openid);
+        if (!userRes.isSuccess() || userRes.getData() == null) {
+            return ResBuilder.genError("invalid user");
+        }
+        int desType = 0;
+        if (srcType != null) {
+            desType = srcType ^ 0x01;
+        }
+        ResultDto<Boolean> resultDto = userService.updateUserType(userRes.getData().getId(), desType);
+        return ResBuilder.genData(resultDto.isSuccess() ? desType : srcType);
+    }
+
+    public ResultDto<Integer> getUserType(String openid) {
+        Preconditions.checkArgument(StringUtils.isNotBlank(openid));
+        ResultDto<User> userRes = userService.getOrInsert(openid);
+        if (!userRes.isSuccess() || userRes.getData() == null) {
+            return ResBuilder.genError("invalid user");
+        }
+        return userService.getUserType(userRes.getData().getId());
+    }
+
+    public ResultDto<List<CompanyDto>> getBelongedCompanies(String openid) {
+        Preconditions.checkArgument(StringUtils.isNotBlank(openid));
+        ResultDto<User> userRes = userService.getOrInsert(openid);
+        if (!userRes.isSuccess() || userRes.getData() == null) {
+            return ResBuilder.genError("invalid user");
+        }
+        ResultDto<List<CompanyBelonged>> belongedRes = belongedService.getBelongedCompanies(userRes.getData().getId());
+        if (!belongedRes.isSuccess()) {
+            return ResBuilder.genError(belongedRes.getMsg());
+        }
+        if (CollectionUtils.isEmpty(belongedRes.getData())) {
+            return ResBuilder.genData(Collections.emptyList());
+        }
+        Set<Integer> belongedCompanyIds = belongedRes.getData()
+                .stream()
+                .map(CompanyBelonged::getCompanyId)
+                .collect(Collectors.toSet());
+        if (CollectionUtils.isEmpty(belongedCompanyIds)) {
+            return ResBuilder.genData(Collections.emptyList());
+        }
+        return companyInfoService.getCompanyByIds(belongedCompanyIds);
+    }
+
+    public ResultDto<Boolean> addBelongedCompany(String openid, Integer companyId) {
+        Preconditions.checkArgument(StringUtils.isNotBlank(openid));
+        ResultDto<User> userRes = userService.getOrInsert(openid);
+        if (!userRes.isSuccess() || userRes.getData() == null) {
+            return ResBuilder.genError("invalid user");
+        }
+        //check companyId whether exists
+        ResultDto<Boolean> checkCompanyRes = companyService.checkCompanyId(companyId);
+        if (!checkCompanyRes.isSuccess()) {
+            return checkCompanyRes;
+        }
+        if (!checkCompanyRes.getData()) {
+            return ResBuilder.genError("invalid company id");
+        }
+
+        //add belonged
+        ResultDto<CompanyBelonged> belongedRes
+                = belongedService.insert(new CompanyBelonged(userRes.getData().getId(), companyId));
+        if (!belongedRes.isSuccess()) {
+            return ResBuilder.genError(belongedRes.getMsg());
+        }
+        return ResBuilder.genData(true);
+
     }
 
     public ResultDto<List<User>> getAllUsers() {

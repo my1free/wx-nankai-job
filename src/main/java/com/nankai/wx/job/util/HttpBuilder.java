@@ -34,6 +34,14 @@ public class HttpBuilder {
         return jsonObject;
     }
 
+    public static JSONObject genError(String msg) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("code", 1);
+        jsonObject.put("msg", msg);
+        jsonObject.put("data", null);
+        return jsonObject;
+    }
+
     public static JSONObject genError(Exception e) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("code", 1);

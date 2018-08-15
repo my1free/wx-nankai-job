@@ -19,4 +19,17 @@ public class NumberUtil {
         }
         return false;
     }
+
+    public static boolean isNullOrNonePositive(Number value) {
+        if (value == null) {
+            return true;
+        }
+        if (value instanceof Integer) {
+            return (Integer) value <= 0;
+        }
+        if (value instanceof Long) {
+            return (Long) value <= 0;
+        }
+        return false;
+    }
 }

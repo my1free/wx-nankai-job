@@ -5,6 +5,7 @@ import com.nankai.wx.job.db.domain.Category;
 import com.nankai.wx.job.db.domain.City;
 import com.nankai.wx.job.db.service.CategoryService;
 import com.nankai.wx.job.db.service.CityService;
+import com.nankai.wx.job.db.service.FeedbackService;
 import com.nankai.wx.job.dto.NaviDto;
 import com.nankai.wx.job.dto.ResultDto;
 import com.nankai.wx.job.util.HttpBuilder;
@@ -32,11 +33,13 @@ public class IntegratedController {
     private CityService cityService;
     @Resource
     private CategoryService categoryService;
+    @Resource
+    private FeedbackService feedbackService;
 
     @ResponseBody
     @RequestMapping("/navi")
     public JSONObject navi() {
-        logger.error("[navi] [get navi info]");
+        logger.info("[navi] [get navi info]");
         try {
             NaviDto naviDto = new NaviDto();
 

@@ -15,6 +15,7 @@ public class User extends Base {
     private String email;
     private String mobile;
     private String wechat;
+    private Integer type;
 
 
     public String getOpenid() {
@@ -73,6 +74,14 @@ public class User extends Base {
         this.wechat = wechat;
     }
 
+    public Integer getType() {
+        return type;
+    }
+
+    public void setType(Integer type) {
+        this.type = type;
+    }
+
     @Override
     public String toString() {
         final StringBuffer sb = new StringBuffer("User{");
@@ -83,6 +92,7 @@ public class User extends Base {
         sb.append(", email='").append(email).append('\'');
         sb.append(", mobile='").append(mobile).append('\'');
         sb.append(", wechat='").append(wechat).append('\'');
+        sb.append(", type=").append(type);
         sb.append('}');
         return sb.toString();
     }

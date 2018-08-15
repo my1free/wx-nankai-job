@@ -1,6 +1,7 @@
 package com.nankai.wx.job.controller;
 
 import com.alibaba.fastjson.JSONObject;
+import com.nankai.wx.job.common.Constant;
 import com.nankai.wx.job.db.domain.Eduexp;
 import com.nankai.wx.job.db.domain.User;
 import com.nankai.wx.job.db.domain.Workexp;
@@ -319,6 +320,92 @@ public class UserController {
         } catch (Exception e) {
             logger.error("[updateEduexp] [update eduexp exception] sessionId={}", sessionId, e);
             return HttpBuilder.genError(e);
+        }
+    }
+
+    @ResponseBody
+    @RequestMapping("/feedback/report")
+    public JSONObject reportFeedback(String sessionId, String feedback) {
+        logger.info("[reportFeedback] sessionId={}, feedback={}", sessionId, feedback);
+        try {
+            if (StringUtils.isBlank(feedback)) {
+                return HttpBuilder.genCode(1, "反馈不能为空");
+            }
+            String openid = CommonUtil.getOpenid(sessionId);
+            if (StringUtils.isBlank(openid)) {
+                return HttpBuilder.genCode(401, "invalid session id");
+            }
+
+            return HttpBuilder.genJson(userInfoService.saveFeedback(openid, feedback));
+        } catch (Exception e) {
+            logger.error("[reportFeedback] [save feedback exception]", e);
+            return HttpBuilder.genError(e);
+        }
+    }
+
+    @ResponseBody
+    @RequestMapping("/type/change")
+    public JSONObject changeType(String sessionId, Integer srcType) {
+        try {
+            String openid = CommonUtil.getOpenid(sessionId);
+            if (StringUtils.isBlank(openid)) {
+                return HttpBuilder.genCode(401, "invalid session id");
+            }
+            return HttpBuilder.genJson(userInfoService.updateUserType(openid, srcType));
+        } catch (Exception e) {
+            logger.error("[changeType] [change type exception]", e);
+            return HttpBuilder.genError(e);
+        }
+    }
+
+    @ResponseBody
+    @RequestMapping("/type/value")
+    public JSONObject getType(String sessionId) {
+        try {
+            logger.info("[getType] sessionId={}", sessionId);
+            String openid = CommonUtil.getOpenid(sessionId);
+            if (StringUtils.isBlank(openid)) {
+                return HttpBuilder.genCode(401, "invalid session id");
+            }
+            return HttpBuilder.genJson(userInfoService.getUserType(openid));
+
+        } catch (Exception e) {
+            logger.error("[getType] [get type exception]", e);
+            return HttpBuilder.genError(e);
+        }
+    }
+
+    @ResponseBody
+    @RequestMapping("/company/list")
+    public JSONObject companies(String sessionId) {
+        try {
+            logger.info("[companies] sessionId={}", sessionId);
+            String openid = CommonUtil.getOpenid(sessionId);
+            if (StringUtils.isBlank(openid)) {
+                return HttpBuilder.genCode(401, "invalid session id");
+            }
+            return HttpBuilder.genJson(userInfoService.getBelongedCompanies(openid));
+
+        } catch (Exception e) {
+            logger.error("[companies] [get type exception]", e);
+            return HttpBuilder.genError(Constant.SYSTEM_ERROR);
+        }
+    }
+
+    @ResponseBody
+    @RequestMapping("/company/belonged/add")
+    public JSONObject addBelongedCompany(String sessionId, Integer companyId) {
+        try {
+            logger.info("[addBelongedCompany] sessionId={}, companyId={}", sessionId, companyId);
+            String openid = CommonUtil.getOpenid(sessionId);
+            if (StringUtils.isBlank(openid)) {
+                return HttpBuilder.genCode(401, "invalid session id");
+            }
+            return HttpBuilder.genJson(userInfoService.addBelongedCompany(openid, companyId));
+
+        } catch (Exception e) {
+            logger.error("[addBelongedCompany] [add belonged company exception]", e);
+            return HttpBuilder.genError(Constant.SYSTEM_ERROR);
         }
     }
 

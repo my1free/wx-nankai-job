@@ -8,10 +8,9 @@ package com.nankai.wx.job.db.domain;
  */
 public class Company extends Base {
     private String name;
+    private String fullname;
     private String logo;
-    private String location;
-    private String compayAbstract;
-    private String description;
+    private String introduction;
 
     public String getName() {
         return name;
@@ -29,38 +28,29 @@ public class Company extends Base {
         this.logo = logo;
     }
 
-    public String getLocation() {
-        return location;
+    public String getFullname() {
+        return fullname;
     }
 
-    public void setLocation(String location) {
-        this.location = location;
+    public void setFullname(String fullname) {
+        this.fullname = fullname;
     }
 
-    public String getCompayAbstract() {
-        return compayAbstract;
+    public String getIntroduction() {
+        return introduction;
     }
 
-    public void setCompayAbstract(String compayAbstract) {
-        this.compayAbstract = compayAbstract;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
+    public void setIntroduction(String introduction) {
+        this.introduction = introduction;
     }
 
     @Override
     public String toString() {
         final StringBuffer sb = new StringBuffer("Company{");
         sb.append("name='").append(name).append('\'');
+        sb.append(", fullname='").append(fullname).append('\'');
         sb.append(", logo='").append(logo).append('\'');
-        sb.append(", location='").append(location).append('\'');
-        sb.append(", compayAbstract='").append(compayAbstract).append('\'');
-        sb.append(", description='").append(description).append('\'');
+        sb.append(", introduction='").append(introduction).append('\'');
         sb.append('}');
         return sb.toString();
     }

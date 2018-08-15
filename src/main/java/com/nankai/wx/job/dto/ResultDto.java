@@ -37,7 +37,7 @@ public class ResultDto<T> {
 
     @Override
     public String toString() {
-        final StringBuffer sb = new StringBuffer("com.michealyang.webbase.dto.ResultDto{");
+        final StringBuffer sb = new StringBuffer("ResultDto{");
         sb.append("success=").append(success);
         sb.append(", msg='").append(msg).append('\'');
         sb.append(", data=").append(data);

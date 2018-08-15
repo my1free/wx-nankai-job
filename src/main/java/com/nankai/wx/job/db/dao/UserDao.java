@@ -7,8 +7,10 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Options;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.SelectProvider;
+import org.apache.ibatis.annotations.Update;
 import org.apache.ibatis.annotations.UpdateProvider;
 
 import java.util.List;
@@ -38,13 +40,19 @@ public interface UserDao {
     int updateUser(User user);
 
     @Options(useGeneratedKeys = true)
-    @Insert("insert into user(openid, unionid, name, avatar, ctime, utime) " +
-            " values(#{openid}, #{unionid}, #{name}, #{avatar}, unix_timestamp(), unix_timestamp())" +
+    @Insert("insert into user(openid, unionid, name, avatar, type, ctime, utime) " +
+            " values(#{openid}, #{unionid}, #{name}, #{avatar}, 0, unix_timestamp(), unix_timestamp())" +
             " ON DUPLICATE KEY UPDATE name=#{name}, avatar=#{avatar}, utime=unix_timestamp()")
     int insertOrUpdate(User user);
 
     @SelectProvider(type = SqlProvider.class, method = "getUserByConds")
     List<User> getUserByConds(Map<String, Object> conds);
+
+    @Update("UPDATE user SET type=#{type} WHERE id=#{userId}")
+    int updateUserType(@Param("userId") int userId, @Param("type") int type);
+
+    @Select("SELECT type FROM user WHERE id=#{userId}")
+    Integer getUserType(@Param("userId") int userId);
 
     class SqlProvider {
         public String getUserByConds(Map<String, Object> conds) {

@@ -35,6 +35,7 @@ public class UserService {
 
     private static final String wechatApiHost = "https://api.weixin.qq.com/";
     private static String code2SessionUri = "sns/jscode2session?appid=APPID&secret=SECRET&js_code=JSCODE&grant_type=authorization_code";
+    private static String DB_ERROR = "数据库错误";
 
     @Resource
     private UserDao userDao;
@@ -48,52 +49,68 @@ public class UserService {
      * @return
      */
     public ResultDto<User> updateOrInsertUser(String openid, String name, String avatar) {
-        if (StringUtils.isBlank(openid)) {
-            return ResBuilder.genError("invalid parameters");
-        }
-        User user = new User();
-        user.setOpenid(openid);
-        if (StringUtils.isNotBlank(name)) {
-            user.setName(name);
-        }
-        if (StringUtils.isNotBlank(avatar)) {
-            user.setAvatar(avatar);
-        }
-        userDao.insertOrUpdate(user);
+        try {
+            if (StringUtils.isBlank(openid)) {
+                return ResBuilder.genError("invalid parameters");
+            }
+            User user = new User();
+            user.setOpenid(openid);
+            if (StringUtils.isNotBlank(name)) {
+                user.setName(name);
+            }
+            if (StringUtils.isNotBlank(avatar)) {
+                user.setAvatar(avatar);
+            }
+            userDao.insertOrUpdate(user);
 
-        return ResBuilder.genData(user);
+            return ResBuilder.genData(user);
+        } catch (Exception e) {
+            logger.error("db exception", e);
+            return ResBuilder.genError(DB_ERROR);
+        }
     }
 
     /**
      * 根据openid获取User信息，如果没有，则插入一条
+     *
      * @param openid
      * @return
      */
     public ResultDto<User> getOrInsert(String openid) {
-        if (StringUtils.isBlank(openid)) {
-            return ResBuilder.genError("invalid parameters");
-        }
-        Map<String, Object> conds = Maps.newHashMap();
-        conds.put("openid", openid);
-        List<User> users = userDao.getUserByConds(conds);
-        if (CollectionUtils.isNotEmpty(users)) {
-            return ResBuilder.genData(users.get(0));
-        } else {
-            return ResBuilder.genData(updateOrInsertUser(openid, null, null));
+        try {
+            if (StringUtils.isBlank(openid)) {
+                return ResBuilder.genError("invalid parameters");
+            }
+            Map<String, Object> conds = Maps.newHashMap();
+            conds.put("openid", openid);
+            List<User> users = userDao.getUserByConds(conds);
+            if (CollectionUtils.isNotEmpty(users)) {
+                return ResBuilder.genData(users.get(0));
+            } else {
+                return ResBuilder.genData(updateOrInsertUser(openid, null, null));
+            }
+        } catch (Exception e) {
+            logger.error("db exception", e);
+            return ResBuilder.genError(DB_ERROR);
         }
     }
 
     public ResultDto<Integer> getUserId(String openid) {
-        if (StringUtils.isBlank(openid)) {
-            return ResBuilder.genError("invalid parameters");
+        try {
+            if (StringUtils.isBlank(openid)) {
+                return ResBuilder.genError("invalid parameters");
+            }
+            Map<String, Object> conds = Maps.newHashMap();
+            conds.put("openid", openid);
+            List<User> users = userDao.getUserByConds(conds);
+            if (CollectionUtils.isNotEmpty(users)) {
+                return ResBuilder.genData(users.get(0));
+            }
+            return ResBuilder.genData(null);
+        } catch (Exception e) {
+            logger.error("db exception", e);
+            return ResBuilder.genError(DB_ERROR);
         }
-        Map<String, Object> conds = Maps.newHashMap();
-        conds.put("openid", openid);
-        List<User> users = userDao.getUserByConds(conds);
-        if (CollectionUtils.isNotEmpty(users)) {
-            return ResBuilder.genData(users.get(0));
-        }
-        return ResBuilder.genData(null);
     }
 
     public ResultDto<List<User>> getAllUsers() {
@@ -102,36 +119,85 @@ public class UserService {
 
     public ResultDto<String> onLogin(String code) {
         Preconditions.checkArgument(StringUtils.isNotBlank(code));
-        String url = wechatApiHost +
-                code2SessionUri.replace("APPID", appId)
-                        .replace("SECRET", secret)
-                        .replace("JSCODE", code);
-        String res = HttpUtil.doGet(url);
-        JSONObject data = JSONObject.parseObject(res);
-        if (data.getInteger("errcode") != null) {
-            return ResBuilder.genError(data.getString("errmsg"));
-        }
-        String openid = data.getString("openid");
-        String sessionKey = data.getString("session_key");
+        try {
+            String url = wechatApiHost +
+                    code2SessionUri.replace("APPID", appId)
+                            .replace("SECRET", secret)
+                            .replace("JSCODE", code);
+            String res = HttpUtil.doGet(url);
+            JSONObject data = JSONObject.parseObject(res);
+            if (data.getInteger("errcode") != null) {
+                return ResBuilder.genError(data.getString("errmsg"));
+            }
+            String openid = data.getString("openid");
+            String sessionKey = data.getString("session_key");
 
-        return ResBuilder.genData(res);
+            return ResBuilder.genData(res);
+        } catch (Exception e) {
+            logger.error("db exception", e);
+            return ResBuilder.genError(DB_ERROR);
+        }
     }
 
     public ResultDto<User> getUserById(Integer userId) {
-        if (NumberUtil.isNullOrZero(userId)) {
-            return ResBuilder.genError("invalid user");
+        try {
+            if (NumberUtil.isNullOrZero(userId)) {
+                return ResBuilder.genError("invalid user");
+            }
+            Map<String, Object> conds = Maps.newHashMap();
+            conds.put("id", userId);
+            List<User> users = userDao.getUserByConds(conds);
+            if (CollectionUtils.isEmpty(users)) {
+                return ResBuilder.genError("invalid user");
+            }
+            return ResBuilder.genData(users.get(0));
+        } catch (Exception e) {
+            logger.error("db exception", e);
+            return ResBuilder.genError(DB_ERROR);
         }
-        Map<String, Object> conds = Maps.newHashMap();
-        conds.put("id", userId);
-        List<User> users = userDao.getUserByConds(conds);
-        if (CollectionUtils.isEmpty(users)) {
-            return ResBuilder.genError("invalid user");
+    }
+
+    /**
+     * 更新用户类型
+     *
+     * @param userId
+     * @param type
+     * @return
+     */
+    public ResultDto<Boolean> updateUserType(Integer userId, Integer type) {
+        try {
+            if (NumberUtil.isNullOrZero(userId)) {
+                return ResBuilder.genError("invalid user");
+            }
+            if (type == null || (type != 0 && type != 1)) {
+                type = 0;
+            }
+            return ResBuilder.genData(userDao.updateUserType(userId, type) > 0);
+        } catch (Exception e) {
+            logger.error("db exception", e);
+            return ResBuilder.genError(DB_ERROR);
         }
-        return ResBuilder.genData(users.get(0));
+    }
+
+    public ResultDto<Integer> getUserType(Integer userId) {
+        try {
+            if (NumberUtil.isNullOrZero(userId)) {
+                return ResBuilder.genError("invalid user");
+            }
+            Integer type = userDao.getUserType(userId);
+            if (type == null) {
+                type = 0;
+            }
+            return ResBuilder.genData(type);
+        } catch (Exception e) {
+            logger.error("db exception", e);
+            return ResBuilder.genError(DB_ERROR);
+        }
     }
 
     /**
      * 更新用户信息
+     *
      * @param user
      * @return
      */

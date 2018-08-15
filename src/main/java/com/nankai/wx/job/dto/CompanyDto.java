@@ -11,11 +11,13 @@ import java.util.List;
 public class CompanyDto {
     private Integer id;
     private String name;
+    private String fullname;
     private String logo;
-    private String compayAbstract;
-    private String description;
+    private String introduction;
+    private List<LocationDto> locations;
     private List<JobInfoDto> jobInfoDtos;
     private boolean concerned;
+    private boolean belonged;
 
     public Integer getId() {
         return id;
@@ -41,20 +43,28 @@ public class CompanyDto {
         this.logo = logo;
     }
 
-    public String getCompayAbstract() {
-        return compayAbstract;
+    public String getFullname() {
+        return fullname;
     }
 
-    public void setCompayAbstract(String compayAbstract) {
-        this.compayAbstract = compayAbstract;
+    public void setFullname(String fullname) {
+        this.fullname = fullname;
     }
 
-    public String getDescription() {
-        return description;
+    public String getIntroduction() {
+        return introduction;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setIntroduction(String introduction) {
+        this.introduction = introduction;
+    }
+
+    public List<LocationDto> getLocations() {
+        return locations;
+    }
+
+    public void setLocations(List<LocationDto> locations) {
+        this.locations = locations;
     }
 
     public List<JobInfoDto> getJobInfoDtos() {
@@ -73,16 +83,26 @@ public class CompanyDto {
         this.concerned = concerned;
     }
 
+    public boolean isBelonged() {
+        return belonged;
+    }
+
+    public void setBelonged(boolean belonged) {
+        this.belonged = belonged;
+    }
+
     @Override
     public String toString() {
         final StringBuffer sb = new StringBuffer("CompanyDto{");
         sb.append("id=").append(id);
         sb.append(", name='").append(name).append('\'');
+        sb.append(", fullname='").append(fullname).append('\'');
         sb.append(", logo='").append(logo).append('\'');
-        sb.append(", compayAbstract='").append(compayAbstract).append('\'');
-        sb.append(", description='").append(description).append('\'');
+        sb.append(", introduction='").append(introduction).append('\'');
+        sb.append(", locations=").append(locations);
         sb.append(", jobInfoDtos=").append(jobInfoDtos);
         sb.append(", concerned=").append(concerned);
+        sb.append(", belonged=").append(belonged);
         sb.append('}');
         return sb.toString();
     }

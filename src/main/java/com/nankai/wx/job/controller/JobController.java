@@ -53,7 +53,7 @@ public class JobController {
     @ResponseBody
     @RequestMapping("/detail")
     public JSONObject detail(Integer jobId, String sessionId) {
-        logger.error("[detail] jobId={}, sessionId={}", jobId, sessionId);
+        logger.info("[detail] jobId={}, sessionId={}", jobId, sessionId);
         try {
             String openid = CommonUtil.getOpenid(sessionId);
             if (StringUtils.isBlank(openid)) {
@@ -73,7 +73,7 @@ public class JobController {
     @ResponseBody
     @RequestMapping("/search")
     public JSONObject search(SearchQuery query) {
-        logger.error("[search] searchQuery={}", query);
+        logger.info("[search] searchQuery={}", query);
         try {
             ResultDto<List<JobInfoDto>> jobListRes = jobInfoService.getJobBySearch(query);
             if (!jobListRes.isSuccess()) {
