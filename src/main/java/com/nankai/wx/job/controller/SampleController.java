@@ -16,10 +16,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 public class SampleController {
     private static final Logger logger = LoggerFactory.getLogger(SampleController.class);
 
-    @RequestMapping("/")
-    @ResponseBody
-    String home() {
-        return "Hello World!";
-    }
+//    @RequestMapping("/")
+//    @ResponseBody
+//    String home() {
+//        return "Hello World!";
+//    }
 
 }
